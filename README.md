@@ -101,7 +101,7 @@ API REST desenvolvida como resposta ao desafio técnico back-end da Shipay. Incl
 ### 1. Clonar o repositório
 
 ```bash
-git git clone -b main --single-branch https://github.com/cicero-lucas/backend-challenge.git
+git clone -b main --single-branch https://github.com/cicero-lucas/backend-challenge.git
 cd backend-challenge
 ```
 
