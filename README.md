@@ -1,47 +1,267 @@
 # Shipay Back-end Challenge
 
-***Nota: Utilizaremos os seguintes critérios para a avaliação: Desempenho, Testes, Manutenabilidade, Separação de responsabilidades e boas práticas de engenharia de software.***
+[![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)]()
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)]()
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-FF2D20?logo=sqlalchemy&logoColor=white)]()
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)]()
+[![Alembic](https://img.shields.io/badge/Alembic-006400?logo=alembic&logoColor=white)]()
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)]()
 
-1.- Tomando como base a estrutura do banco de dados fornecida (conforme diagrama [ER_diagram.png] e/ou script DDL [1_create_database_ddl.sql], disponibilizados no repositório do github): Construa uma consulta SQL que retorne o nome, e-mail, a descrição do papel e as descrições das permissões/claims que um usuário possui.
+API REST desenvolvida como resposta ao desafio técnico back-end da Shipay. Inclui consultas SQL, ORM com SQLAlchemy, endpoints FastAPI, testes automatizados com PostgreSQL e documentação de deploy em produção na AWS.
 
-2.- Utilizando a mesma estrutura do banco de dados da questão anterior, rescreva a consulta anterior utilizando um ORM (Object Relational Mapping) de sua preferência utilizando a query language padrão do ORM adotado (ex.: Spring JOOQ, EEF LINQ, SQL Alchemy Expression Language, etc).
+---
 
-3.- Utilizando a mesma estrutura do banco de dados fornecida anteriormente, e a linguagem que desejar, construa uma API REST que irá listar o papel de um usuário pelo “Id” (role_id).
+## Pré-requisitos
 
-4.- Utilizando a mesma estrutura do banco de dados fornecida anteriormente, e a linguagem que desejar, construa uma API REST que irá criar um usuário. Os campos obrigatórios serão nome, e-mail e papel do usuário. A senha será um campo opcional, caso o usuário não informe uma senha o serviço da API deverá gerar essa senha automaticamente.
+| Ferramenta                                   | Versão mínima |
+| -------------------------------------------- | --------------- |
+| Git                                          | 2+              |
+| Docker                                       | 24+             |
+| Docker Compose                               | 2.24+           |
+| Python*(opcional, testes locais sem Docker)* | 3.12+           |
 
-5.- Crie uma documentação que explique como executar seu projeto em ambiente local e também como deverá ser realizado o ‘deploy’ em ambiente produtivo.
+---
 
-***Para a próxima questão (a de número 6) apesar da 'stack trace' apresentada ser em Python, o erro é genérico e pode ocorrer com qualquer outra linguagem.***
+## Instalação e execução
 
-6.- Nossos analistas de qualidade reportaram uma falha que só acontece em ambientes diferentes do local/desenvolvimento, os engenheiros responsáveis pelo ambiente de Homologação já descartaram problemas de infra-estrutura, temos que levantar o que está acontecendo.
+### 1. Clonar o repositório
 
-Ao executar o comando para listar os logs (no stdio) do Pod de Jobs, capturei o seguinte registro de log:
+```bash
+git clone https://github.com/cicero-lucas/Shipay-Backend-Challenge.git
+cd Shipay-Backend-Challenge
+```
 
-[2020-07-06 20:24:49,781: INFO/ForkPoolWorker-2] [expire_orders] - Finishing job…
+### 2. Subir o ambiente
 
-[2020-07-06 20:34:49,721: INFO/ForkPoolWorker-1] [renew_wallet_x_access_tokens] Starting task that renew Access Tokens from Wallet X about to expire
+```bash
+docker compose up --build
+```
 
-[2020-07-06 20:34:49,723: ERROR/ForkPoolWorker-1] Task tasks.wallet_oauth.renew_wallet_x_access_tokens[ee561a2e-e837-4d98-b771-07f4e2b5ec70] raised unexpected: AttributeError("module 'core.settings' has no attribute ‘WALLET_X_TOKEN_MAX_AGE'")
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.7/site-packages/celery/app/trace.py", line 385, in trace_task
-    R = retval = fun(args, kwargs)
-  File "/usr/local/lib/python3.7/site-packages/celery/app/trace.py", line 650, in __protected_call__
-    return self.run(args, kwargs)
-  File "/opt/worker/src/tasks/wallet_oauth.py", line 15, in renew_wallet_x_access_tokens
-    expire_at = now - settings.WALLET_X_TOKEN_MAX_AGE
-AttributeError: module 'core.settings' has no attribute ‘WALLET_X_TOKEN_MAX_AGE'
+Isso irá:
 
-[2020-07-06 20:34:49,799: INFO/ForkPoolWorker-2] [expire_orders] - Starting job…
+1. Subir um container **PostgreSQL 16**
+2. Aplicar as migrations via `alembic upgrade head` automaticamente
+3. Subir a **API FastAPI** na porta `8000` com roles e claims pré-cadastrados
 
-[2020-07-66 20:34:49,801: INFO/ForkPoolWorker-2] [expire_orders] - Filtering pending operations older than 10 minutes ago.
+### 3. Acessar a documentação interativa
 
+```
+http://localhost:8000/docs
+```
 
-***De acordo com o log capturado, o que pode estar originando a falha?***
+---
 
+## Endpoints
 
-7.- Ajude-nos fazendo o ‘Code Review’ do código de um robô/rotina que exporta os dados da tabela “users” de tempos em tempos. O código foi disponibilizado no mesmo repositório do git hub dentro da pasta “bot”. ***ATENÇÃO: Não é necessário implementar as revisões, basta apenas anota-las em um arquivo texto ou em forma de comentários no código.***
+### `GET /roles/{role_id}`
 
-8.- Qual ou quais Padrões de Projeto/Design Patterns você utilizaria para normalizar serviços de terceiros (tornar múltiplas interfaces de diferentes fornecedores uniforme), por exemplo serviços de disparos de e-mails, ou então disparos de SMS. ***ATENÇÃO: Não é necessário implementar o Design Pattern, basta descrever qual você utilizaria e por quais motivos optou pelo mesmo.***
+Retorna um papel pelo ID.
 
-BOA SORTE!
+```bash
+curl http://localhost:8000/roles/1
+# {"id": 1, "description": "admin"}
+```
+
+### `POST /users/`
+
+Cria um usuário. A senha é opcional — gerada automaticamente se não informada.
+
+```bash
+# Sem senha (gerada automaticamente)
+curl -X POST http://localhost:8000/users/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alice", "email": "alice@example.com", "role_id": 1}'
+
+# Com senha definida manualmente
+curl -X POST http://localhost:8000/users/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Lucas", "email": "lucas@example.com", "role_id": 1, "password": "12345"}'
+```
+
+| Campo        | Tipo                    | Obrigatório              |
+| ------------ | ----------------------- | ------------------------- |
+| `name`     | string                  | ✅                        |
+| `email`    | string (e-mail válido) | ✅                        |
+| `role_id`  | integer                 | ✅                        |
+| `password` | string                  | ❌ gerado automaticamente |
+
+Resposta `201 Created`:
+
+```json
+{"id": 1, "name": "Alice", "email": "alice@example.com", "role_id": 1, "password": "abc123..."}
+```
+
+### `GET /users/{user_id}`
+
+Retorna os dados de um usuário pelo ID.
+
+```bash
+curl http://localhost:8000/users/1
+# {"id": 1, "name": "Alice", "email": "alice@example.com", "role_id": 1, "password": "abc123..."}
+```
+
+---
+
+## Testes
+
+Os testes rodam contra um banco **PostgreSQL dedicado** (`shipay_test`), garantindo paridade total com o ambiente de produção.
+
+### Via Docker (recomendado)
+
+```bash
+docker compose build test && docker compose run --rm test
+```
+
+Sobe um PostgreSQL isolado na porta `5433`, cria o schema, executa todos os testes e encerra.
+
+### Localmente (com PostgreSQL rodando)
+
+```bash
+cd api
+pip install -r requirements.txt
+TEST_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/shipay_test pytest -v
+```
+
+### Rodando testes específicos
+
+```bash
+# Apenas os testes de roles
+docker compose run --rm test pytest tests/test_roles.py -v
+
+# Apenas os testes de usuários
+docker compose run --rm test pytest tests/test_users.py -v
+
+# Um teste específico
+docker compose run --rm test pytest tests/test_users.py::test_create_user_success -v
+```
+
+### O que é testado
+
+| Arquivo           | Casos de teste                                                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test_roles.py` | GET role existente (200) · GET role inexistente (404)                                                                                               |
+| `test_users.py` | POST com sucesso · POST com senha gerada automaticamente · role inexistente (404) · e-mail inválido (422) · campos obrigatórios ausentes (422) |
+
+### Saída esperada
+
+```
+tests/test_roles.py::test_get_role_success                    PASSED
+tests/test_roles.py::test_get_role_not_found                  PASSED
+tests/test_users.py::test_create_user_success                 PASSED
+tests/test_users.py::test_create_user_auto_password           PASSED
+tests/test_users.py::test_create_user_invalid_role            PASSED
+tests/test_users.py::test_create_user_invalid_email           PASSED
+tests/test_users.py::test_create_user_missing_required_fields PASSED
+
+7 passed in 0.60s
+```
+
+---
+
+## Estrutura do projeto
+
+```
+.
+├── database/
+│   ├── 1_create_database_ddl.sql           # DDL original de referência
+│   └── ER_diagram.png
+│
+├── sql/
+│   ├── questao-01.sql                      # Consulta SQL pura (Q1)
+│   └── questao-02.py                       # Consulta SQLAlchemy Expression Language (Q2)
+│
+├── api/
+│   ├── alembic/
+│   │   ├── versions/
+│   │   │   ├── 0001_initial_schema.py      # DDL das tabelas
+│   │   │   └── 0002_seed_initial_data.py   # Roles e claims iniciais
+│   │   └── env.py
+│   ├── alembic.ini
+│   ├── src/
+│   │   ├── db/
+│   │   │   ├── engine.py                   # create_engine + DATABASE_URL
+│   │   │   ├── tables.py                   # Definição das tabelas (SQLAlchemy Core)
+│   │   │   ├── base.py                     # Re-exporta engine, metadata e tabelas
+│   │   │   └── session.py                  # Dependência Connection para FastAPI
+│   │   ├── routers/
+│   │   │   ├── roles.py                    # GET /roles/{role_id}
+│   │   │   └── users.py                    # POST /users/ · GET /users/{user_id}
+│   │   ├── schemas/
+│   │   │   └── schemas.py                  # Schemas Pydantic v2
+│   │   └── main.py                         # Entrypoint FastAPI
+│   ├── tests/
+│   │   ├── conftest.py                     # PostgreSQL + fixtures compartilhadas
+│   │   ├── test_roles.py                   # Testes do GET /roles/{role_id}
+│   │   └── test_users.py                   # Testes do POST /users/
+│   ├── pytest.ini
+│   ├── requirements.txt
+│   └── Dockerfile
+│
+├── bot/                                    # Código original do robô (Q7)
+│   ├── settings/config.ini
+│   ├── bot.py
+│   └── Pipfile
+│
+├── docs/
+│   ├── questao-05-deploy.md                # Execução local e deploy (Q5)
+│   ├── questao-06-bug-analysis.md          # Análise do erro de produção (Q6)
+│   ├── questao-07-code-review.md           # Code review do bot (Q7)
+│   └── questao-08-design-patterns.md       # Design patterns (Q8)
+│
+├── docker-compose.yml
+├── .env.example
+└── README.md
+```
+
+---
+
+## Índice de respostas
+
+| # | Tema                                        | Local                                                                                          |
+| - | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1 | Consulta SQL                                | [`sql/questao-01.sql`](sql/questao-01.sql)                                                      |
+| 2 | ORM — SQLAlchemy Expression Language       | [`sql/questao-02.py`](sql/questao-02.py)                                                        |
+| 3 | API REST — GET /roles/{role_id}            | [`api/src/routers/roles.py`](api/src/routers/roles.py)                                          |
+| 4 | API REST — POST /users/                    | [`api/src/routers/users.py`](api/src/routers/users.py)                                          |
+| 5 | Execução local e deploy produtivo         | [`docs/questao-05-deploy.md`](docs/questao-05-deploy.md)                                        |
+| 6 | Análise da falha nos logs de produção    | [`docs/questao-06-bug-analysis.md`](docs/questao-06-bug-analysis.md)                            |
+| 7 | Code review do bot                          | [`docs/questao-07-code-review.md`](docs/questao-07-code-review.md) · [`bot/bot.py`](bot/bot.py) |
+| 8 | Design patterns para serviços de terceiros | [`docs/questao-08-design-patterns.md`](docs/questao-08-design-patterns.md)                      |
+
+---
+
+## Decisões técnicas
+
+### Migrations com Alembic
+
+O schema é versionado via **Alembic**, executado automaticamente no startup do container antes da API subir.
+
+| Migration                     | Conteúdo                                   |
+| ----------------------------- | ------------------------------------------- |
+| `0001_initial_schema.py`    | DDL original fornecido pela Shipay          |
+| `0002_seed_initial_data.py` | Roles e claims iniciais para demonstração |
+
+Comandos úteis:
+
+```bash
+cd api
+
+# Aplicar todas as migrations
+alembic upgrade head
+
+# Reverter a última migration
+alembic downgrade -1
+
+# Ver histórico
+alembic history
+```
+
+O Alembic não era obrigatório para o desafio — o schema é fixo. Foi adicionado por ser o padrão de mercado em projetos FastAPI + SQLAlchemy, tornando o schema auditável, reversível e pronto para evoluir sem `DROP/CREATE`.
+
+### Testes com PostgreSQL
+
+Os testes utilizam um banco PostgreSQL dedicado em vez de SQLite, garantindo que constraints, tipos de dados e comportamento de autoincrement sejam idênticos ao ambiente de produção.
+
+### Pydantic v2
+
+Os schemas utilizam `ConfigDict` em vez do `class Config` depreciado, seguindo as boas práticas do Pydantic v2.
