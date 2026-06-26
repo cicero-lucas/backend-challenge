@@ -27,8 +27,8 @@ API REST desenvolvida como resposta ao desafio técnico back-end da Shipay. Incl
 ### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/cicero-lucas/Shipay-Backend-Challenge.git
-cd Shipay-Backend-Challenge
+git git clone -b main --single-branch https://github.com/cicero-lucas/backend-challenge.git
+cd backend-challenge
 ```
 
 ### 2. Subir o ambiente
@@ -112,17 +112,9 @@ Os testes rodam contra um banco **PostgreSQL dedicado** (`shipay_test`), garanti
 docker compose build test && docker compose run --rm test
 ```
 
-Sobe um PostgreSQL isolado na porta `5433`, cria o schema, executa todos os testes e encerra.
+Esse comando sobe um container PostgreSQL isolado na porta `5433`, cria o schema automaticamente via Alembic, executa toda a suíte de testes e encerra os containers ao final. Não é necessário ter Python ou PostgreSQL instalados localmente.
 
-### Localmente (com PostgreSQL rodando)
-
-```bash
-cd api
-pip install -r requirements.txt
-TEST_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/shipay_test pytest -v
-```
-
-### Rodando testes específicos
+#### Rodando testes específicos via Docker
 
 ```bash
 # Apenas os testes de roles
@@ -134,6 +126,39 @@ docker compose run --rm test pytest tests/test_users.py -v
 # Um teste específico
 docker compose run --rm test pytest tests/test_users.py::test_create_user_success -v
 ```
+
+### Localmente (sem Docker)
+
+Para rodar os testes localmente é necessário ter **Python 3.12+** e o banco de testes disponível na porta `5433`.
+
+> **Atenção:** o `docker compose up --build` sobe apenas a API e o banco principal (`shipay` na porta `5432`). O banco de testes (`shipay_test` na porta `5433`) é um serviço separado e **não sobe junto**.
+
+**1. Suba apenas o banco de testes:**
+
+```bash
+docker compose up db-test -d
+```
+
+Isso sobe um container PostgreSQL isolado na porta `5433` com o banco `shipay_test`, sem subir a API.
+
+**2. Crie um ambiente virtual e instale as dependências:**
+
+```bash
+cd api
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+> Sempre que abrir um novo terminal, ative o venv com `source .venv/bin/activate` antes de rodar qualquer comando Python.
+
+**3. Rode os testes:**
+
+```bash
+TEST_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/shipay_test pytest -v
+```
+
+O `conftest.py` cria e destrói o schema automaticamente a cada execução, portanto o banco `shipay_test` precisa existir, mas as tabelas não precisam ser criadas manualmente.
 
 ### O que é testado
 
