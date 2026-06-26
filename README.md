@@ -22,6 +22,80 @@ API REST desenvolvida como resposta ao desafio técnico back-end da Shipay. Incl
 
 ---
 
+---
+
+## Estrutura do projeto
+
+```
+.
+├── database/
+│   ├── 1_create_database_ddl.sql           # DDL original de referência
+│   └── ER_diagram.png
+│
+├── sql/
+│   ├── questao-01.sql                      # Consulta SQL pura (Q1)
+│   └── questao-02.py                       # Consulta SQLAlchemy Expression Language (Q2)
+│
+├── api/
+│   ├── alembic/
+│   │   ├── versions/
+│   │   │   ├── 0001_initial_schema.py      # DDL das tabelas
+│   │   │   └── 0002_seed_initial_data.py   # Roles e claims iniciais
+│   │   └── env.py
+│   ├── alembic.ini
+│   ├── src/
+│   │   ├── db/
+│   │   │   ├── engine.py                   # create_engine + DATABASE_URL
+│   │   │   ├── tables.py                   # Definição das tabelas (SQLAlchemy Core)
+│   │   │   ├── base.py                     # Re-exporta engine, metadata e tabelas
+│   │   │   └── session.py                  # Dependência Connection para FastAPI
+│   │   ├── routers/
+│   │   │   ├── roles.py                    # GET /roles/{role_id}
+│   │   │   └── users.py                    # POST /users/ · GET /users/{user_id}
+│   │   ├── schemas/
+│   │   │   └── schemas.py                  # Schemas Pydantic v2
+│   │   └── main.py                         # Entrypoint FastAPI
+│   ├── tests/
+│   │   ├── conftest.py                     # PostgreSQL + fixtures compartilhadas
+│   │   ├── test_roles.py                   # Testes do GET /roles/{role_id}
+│   │   └── test_users.py                   # Testes do POST /users/
+│   ├── pytest.ini
+│   ├── requirements.txt
+│   └── Dockerfile
+│
+├── bot/                                    # Código original do robô (Q7)
+│   ├── settings/config.ini
+│   ├── bot.py
+│   └── Pipfile
+│
+├── docs/
+│   ├── questao-05-deploy.md                # Execução local e deploy (Q5)
+│   ├── questao-06-bug-analysis.md          # Análise do erro de produção (Q6)
+│   ├── questao-07-code-review.md           # Code review do bot (Q7)
+│   └── questao-08-design-patterns.md       # Design patterns (Q8)
+│
+├── docker-compose.yml
+├── .env.example
+└── README.md
+```
+
+---
+
+## Índice de respostas
+
+| # | Tema                                        | Local                                                                                          |
+| - | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1 | Consulta SQL                                | [`sql/questao-01.sql`](sql/questao-01.sql)                                                      |
+| 2 | ORM — SQLAlchemy Expression Language       | [`sql/questao-02.py`](sql/questao-02.py)                                                        |
+| 3 | API REST — GET /roles/{role_id}            | [`api/src/routers/roles.py`](api/src/routers/roles.py)                                          |
+| 4 | API REST — POST /users/                    | [`api/src/routers/users.py`](api/src/routers/users.py)                                          |
+| 5 | Execução local e deploy produtivo         | [`docs/questao-05-deploy.md`](docs/questao-05-deploy.md)                                        |
+| 6 | Análise da falha nos logs de produção    | [`docs/questao-06-bug-analysis.md`](docs/questao-06-bug-analysis.md)                            |
+| 7 | Code review do bot                          | [`docs/questao-07-code-review.md`](docs/questao-07-code-review.md) · [`bot/bot.py`](bot/bot.py) |
+| 8 | Design patterns para serviços de terceiros | [`docs/questao-08-design-patterns.md`](docs/questao-08-design-patterns.md)                      |
+
+---
+
 ## Instalação e execução
 
 ### 1. Clonar o repositório
@@ -180,80 +254,6 @@ tests/test_users.py::test_create_user_missing_required_fields PASSED
 
 7 passed in 0.60s
 ```
-
----
-
-## Estrutura do projeto
-
-```
-.
-├── database/
-│   ├── 1_create_database_ddl.sql           # DDL original de referência
-│   └── ER_diagram.png
-│
-├── sql/
-│   ├── questao-01.sql                      # Consulta SQL pura (Q1)
-│   └── questao-02.py                       # Consulta SQLAlchemy Expression Language (Q2)
-│
-├── api/
-│   ├── alembic/
-│   │   ├── versions/
-│   │   │   ├── 0001_initial_schema.py      # DDL das tabelas
-│   │   │   └── 0002_seed_initial_data.py   # Roles e claims iniciais
-│   │   └── env.py
-│   ├── alembic.ini
-│   ├── src/
-│   │   ├── db/
-│   │   │   ├── engine.py                   # create_engine + DATABASE_URL
-│   │   │   ├── tables.py                   # Definição das tabelas (SQLAlchemy Core)
-│   │   │   ├── base.py                     # Re-exporta engine, metadata e tabelas
-│   │   │   └── session.py                  # Dependência Connection para FastAPI
-│   │   ├── routers/
-│   │   │   ├── roles.py                    # GET /roles/{role_id}
-│   │   │   └── users.py                    # POST /users/ · GET /users/{user_id}
-│   │   ├── schemas/
-│   │   │   └── schemas.py                  # Schemas Pydantic v2
-│   │   └── main.py                         # Entrypoint FastAPI
-│   ├── tests/
-│   │   ├── conftest.py                     # PostgreSQL + fixtures compartilhadas
-│   │   ├── test_roles.py                   # Testes do GET /roles/{role_id}
-│   │   └── test_users.py                   # Testes do POST /users/
-│   ├── pytest.ini
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── bot/                                    # Código original do robô (Q7)
-│   ├── settings/config.ini
-│   ├── bot.py
-│   └── Pipfile
-│
-├── docs/
-│   ├── questao-05-deploy.md                # Execução local e deploy (Q5)
-│   ├── questao-06-bug-analysis.md          # Análise do erro de produção (Q6)
-│   ├── questao-07-code-review.md           # Code review do bot (Q7)
-│   └── questao-08-design-patterns.md       # Design patterns (Q8)
-│
-├── docker-compose.yml
-├── .env.example
-└── README.md
-```
-
----
-
-## Índice de respostas
-
-| # | Tema                                        | Local                                                                                          |
-| - | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| 1 | Consulta SQL                                | [`sql/questao-01.sql`](sql/questao-01.sql)                                                      |
-| 2 | ORM — SQLAlchemy Expression Language       | [`sql/questao-02.py`](sql/questao-02.py)                                                        |
-| 3 | API REST — GET /roles/{role_id}            | [`api/src/routers/roles.py`](api/src/routers/roles.py)                                          |
-| 4 | API REST — POST /users/                    | [`api/src/routers/users.py`](api/src/routers/users.py)                                          |
-| 5 | Execução local e deploy produtivo         | [`docs/questao-05-deploy.md`](docs/questao-05-deploy.md)                                        |
-| 6 | Análise da falha nos logs de produção    | [`docs/questao-06-bug-analysis.md`](docs/questao-06-bug-analysis.md)                            |
-| 7 | Code review do bot                          | [`docs/questao-07-code-review.md`](docs/questao-07-code-review.md) · [`bot/bot.py`](bot/bot.py) |
-| 8 | Design patterns para serviços de terceiros | [`docs/questao-08-design-patterns.md`](docs/questao-08-design-patterns.md)                      |
-
----
 
 ## Decisões técnicas
 
