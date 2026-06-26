@@ -179,6 +179,8 @@ Resposta `201 Created`:
 {"id": 1, "name": "Alice", "email": "alice@example.com", "role_id": 1, "password": "abc123..."}
 ```
 
+> A senha retornada no `201` é a senha original em texto plano — única oportunidade de visualizá-la. O valor armazenado no banco é um hash **bcrypt**.
+
 ### `GET /users/{user_id}`
 
 Retorna os dados de um usuário pelo ID.
@@ -304,3 +306,7 @@ Os testes utilizam um banco PostgreSQL dedicado em vez de SQLite, garantindo que
 ### Pydantic v2
 
 Os schemas utilizam `ConfigDict` em vez do `class Config` depreciado, seguindo as boas práticas do Pydantic v2.
+
+### Hash de senha com bcrypt
+
+As senhas são armazenadas como hash **bcrypt** via a biblioteca `bcrypt`. A senha original (informada ou gerada) é retornada apenas na resposta do `POST /users/` — depois disso não é recuperável, pois o banco armazena exclusivamente o hash.
