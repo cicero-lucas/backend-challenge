@@ -15,7 +15,7 @@
 ### 1. Clonar o repositório
 
 ```bash
-git git clone -b main --single-branch https://github.com/cicero-lucas/backend-challenge.git
+git clone -b main --single-branch https://github.com/cicero-lucas/backend-challenge.git
 cd backend-challenge
 ```
 
@@ -27,28 +27,115 @@ docker compose up --build
 
 O Compose irá:
 
-1. Subir um container **PostgreSQL 16** e aplicar o DDL automaticamente via `docker-entrypoint-initdb.d`.
-2. Aguardar o banco ficar saudável (*healthcheck*).
-3. Subir a **API FastAPI** na porta `8000`.
+1. Subir um container **PostgreSQL 16**.
+2. Aplicar as migrations via `alembic upgrade head` automaticamente.
+3. Subir a **API FastAPI** na porta `8000` com roles e claims pré-cadastrados.
 
 ### 3. Verificar a API
 
 ```bash
-# Health check
-curl http://localhost:8000/health
-
 # Documentação interativa (Swagger UI)
 http://localhost:8000/docs
 ```
 
 ### 4. Rodar os testes
 
-Os testes usam **SQLite em memória** — não é necessário o banco Postgres rodando.
+Os testes rodam contra um banco **PostgreSQL dedicado** (`shipay_test`), garantindo paridade total com produção.
+
+#### Via Docker (recomendado)
+
+```bash
+docker compose build test && docker compose run --rm test
+```
+
+Esse comando sobe um container PostgreSQL isolado na porta `5433`, cria o schema automaticamente via Alembic, executa toda a suíte de testes e encerra os containers ao final. Não é necessário ter Python ou PostgreSQL instalados localmente.
+
+##### Rodando testes específicos via Docker
+
+```bash
+# Apenas os testes de roles
+docker compose run --rm test pytest tests/test_roles.py -v
+
+# Apenas os testes de usuários
+docker compose run --rm test pytest tests/test_users.py -v
+
+# Um teste específico
+docker compose run --rm test pytest tests/test_users.py::test_create_user_success -v
+```
+
+#### Localmente (sem Docker)
+
+Para rodar os testes localmente é necessário ter **Python 3.12+** e o banco de testes disponível na porta `5433`.
+
+> **Atenção:** o `docker compose up --build` sobe apenas a API e o banco principal (`shipay` na porta `5432`). O banco de testes (`shipay_test` na porta `5433`) é um serviço separado e **não sobe junto**.
+
+**1. Suba apenas o banco de testes:**
+
+```bash
+docker compose up db-test -d
+```
+
+Isso sobe um container PostgreSQL isolado na porta `5433` com o banco `shipay_test`, sem subir a API.
+
+**2. Crie um ambiente virtual e instale as dependências:**
 
 ```bash
 cd api
+python3 -m venv .venv
+source .venv/bin/activate        # Linux/macOS
+# ou
+.venv\Scripts\activate           # Windows
 pip install -r requirements.txt
-pytest tests/ -v
+```
+
+> Sempre que abrir um novo terminal, ative o venv antes de rodar qualquer comando Python.
+
+**3. Rode os testes:**
+
+```bash
+# Suíte completa
+TEST_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/shipay_test pytest -v
+
+# Apenas os testes de roles
+TEST_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/shipay_test pytest tests/test_roles.py -v
+
+# Apenas os testes de usuários
+TEST_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/shipay_test pytest tests/test_users.py -v
+
+# Um teste específico
+TEST_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/shipay_test pytest tests/test_users.py::test_create_user_success -v
+
+# Com relatório de cobertura
+TEST_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/shipay_test pytest -v --cov=src --cov-report=term-missing
+```
+
+O `conftest.py` cria e destrói o schema automaticamente a cada execução via Alembic, portanto o banco `shipay_test` precisa existir, mas as tabelas **não** precisam ser criadas manualmente.
+
+**4. Ao terminar, encerre o banco de testes:**
+
+```bash
+docker compose down db-test
+```
+
+#### O que é testado
+
+| Arquivo           | Casos de teste                                                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test_roles.py` | GET role existente (200) · GET role inexistente (404)                                                                                               |
+| `test_users.py` | POST com sucesso · POST com senha gerada automaticamente · role inexistente (404) · e-mail inválido (422) · campos obrigatórios ausentes (422) |
+
+#### Saída esperada
+
+```
+tests/test_roles.py::test_get_role_success                    PASSED
+tests/test_roles.py::test_get_role_not_found                  PASSED
+tests/test_users.py::test_create_user_success                 PASSED
+tests/test_users.py::test_create_user_auto_password           PASSED
+tests/test_users.py::test_create_user_invalid_role            PASSED
+tests/test_users.py::test_create_user_invalid_email           PASSED
+tests/test_users.py::test_create_user_missing_required_fields PASSED
+
+7 passed in 0.60s
 ```
 
 ---
