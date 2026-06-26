@@ -10,9 +10,6 @@ venv/
 # Env
 .env
 
-# Alembic
-api/alembic/versions/__pycache__/
-
 # OS
 .DS_Store
 Thumbs.db
