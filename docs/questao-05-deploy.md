@@ -15,8 +15,8 @@
 ### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/<seu-usuario>/shipay-challenge.git
-cd shipay-challenge
+git git clone -b main --single-branch https://github.com/cicero-lucas/backend-challenge.git
+cd backend-challenge
 ```
 
 ### 2. Subir o ambiente com Docker Compose
