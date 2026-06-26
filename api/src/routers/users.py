@@ -1,4 +1,5 @@
 import secrets
+import bcrypt
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.engine import Connection
@@ -9,26 +10,32 @@ from ..schemas.schemas import UserCreate, UserResponse
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+def hash_password(plain: str) -> str:
+    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
+
+
 @router.post("/", response_model=UserResponse, status_code=201)
 def create_user(payload: UserCreate, db: Connection = Depends(get_db)):
     role = db.execute(roles.select().where(roles.c.id == payload.role_id)).fetchone()
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
 
-    password = payload.password or secrets.token_urlsafe(12)
+    plain_password = payload.password or secrets.token_urlsafe(12)
 
     result = db.execute(
         users.insert().values(
             name=payload.name,
             email=payload.email,
-            password=password,
+            password=hash_password(plain_password),
             role_id=payload.role_id,
             created_at=datetime.now(timezone.utc).date(),
         )
     )
     db.commit()
     row = db.execute(users.select().where(users.c.id == result.inserted_primary_key[0])).fetchone()
-    return row._mapping
+    data = dict(row._mapping)
+    data["password"] = plain_password
+    return data
 
 
 @router.get("/{user_id}", response_model=UserResponse)
