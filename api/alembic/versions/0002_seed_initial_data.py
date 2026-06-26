@@ -2,7 +2,7 @@
 
 Revision ID: 0002
 Revises: 0001
-Create Date: 2024-01-01 00:01:00
+Create Date: 2024-06-25
 """
 from alembic import op
 from sqlalchemy.sql import table, column

@@ -1,5 +1,29 @@
 # Questão 05 — Execução Local e Deploy em Produção
 
+## Sumário
+
+- [Pré-requisitos](#pré-requisitos)
+- [Execução Local](#execução-local)
+  - [1. Clonar o repositório](#1-clonar-o-repositório)
+  - [2. Subir o ambiente com Docker Compose](#2-subir-o-ambiente-com-docker-compose)
+  - [3. Verificar a API](#3-verificar-a-api)
+  - [4. Rodar os testes](#4-rodar-os-testes)
+    - [Via Docker (recomendado)](#via-docker-recomendado)
+    - [Localmente (sem Docker)](#localmente-sem-docker)
+- [Deploy em Produção](#deploy-em-produção)
+  - [Estratégia recomendada: AWS ECS (Fargate) + RDS PostgreSQL](#estratégia-recomendada-aws-ecs-fargate--rds-postgresql)
+  - [Passo a passo](#passo-a-passo)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Infraestrutura como Código (Terraform)](#infraestrutura-como-código-terraform)
+  - [Estrutura sugerida](#estrutura-sugerida)
+  - [Exemplo dos recursos principais](#exemplo-dos-recursos-principais)
+  - [Comandos de deploy](#comandos-de-deploy)
+  - [Pipeline CI/CD para o Terraform](#pipeline-cicd-para-o-terraform-github-actions)
+- [Estimativa de Custos](#estimativa-de-custos-aws-pricing-calculator)
+- [Alternativa: Google Cloud Platform (GCP)](#alternativa-google-cloud-platform-gcp)
+
+---
+
 ## Pré-requisitos
 
 | Ferramenta                                   | Versão mínima |

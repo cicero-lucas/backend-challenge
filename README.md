@@ -11,6 +11,20 @@ API REST desenvolvida como resposta ao desafio técnico back-end da Shipay. Incl
 
 ---
 
+## Sumário
+
+- [Pré-requisitos](#pré-requisitos)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Índice de respostas](#índice-de-respostas)
+- [Instalação e execução](#instalação-e-execução)
+- [Endpoints](#endpoints)
+- [Testes](#testes)
+  - [Via Docker (recomendado)](#via-docker-recomendado)
+  - [Localmente (sem Docker)](#localmente-sem-docker)
+- [Decisões técnicas](#decisões-técnicas)
+
+---
+
 ## Pré-requisitos
 
 | Ferramenta                                   | Versão mínima |
