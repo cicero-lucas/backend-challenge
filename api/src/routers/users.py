@@ -1,5 +1,5 @@
 import secrets
-from datetime import date
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.engine import Connection
 from ..db.session import get_db
@@ -23,7 +23,7 @@ def create_user(payload: UserCreate, db: Connection = Depends(get_db)):
             email=payload.email,
             password=password,
             role_id=payload.role_id,
-            created_at=date.today(),
+            created_at=datetime.now(timezone.utc).date(),
         )
     )
     db.commit()

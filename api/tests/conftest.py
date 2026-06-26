@@ -8,7 +8,9 @@ from src.main import app
 from src.db.session import get_db
 from src.db.tables import metadata, roles
 
-TEST_DATABASE_URL = os.environ["TEST_DATABASE_URL"]
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
+if not TEST_DATABASE_URL:
+    raise RuntimeError("TEST_DATABASE_URL environment variable is not set")
 
 
 @pytest.fixture(scope="session")
